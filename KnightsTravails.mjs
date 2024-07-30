@@ -68,39 +68,75 @@ class ChessBoard {
 }
 
 const chessboard = new ChessBoard();
+// Inside the visited array find the first visited move that
+// connects to/is a move of the previous move and return it
+const findPrevMove = (node, arr) => {
+  for (const visited of arr) {
+    for (const move of node.moves) {
+      if (chessboard.compareValues(visited.data, move)) {
+        return visited;
+      }
+    }
+  }
+};
+// Checks the visited array so queue doesn't have duplicates
+const checkVisited = (node, arr) => {
+  for (const visited of arr) {
+    if (chessboard.compareValues(node.data, visited.data)) {
+      return false;
+    }
+  }
+  return true;
+};
+// Start from the back/end of the visited array
+// and reconstruct the shortest possible path
+const getShortestPath = (arr) => {
+  const start = arr.pop();
+  const shortestPath = [start.data];
+  const queue = [start];
+
+  while (queue.length > 0) {
+    const node = queue.shift();
+
+    if (chessboard.compareValues(arr[0].data, node.data)) {
+      return shortestPath.reverse();
+    }
+
+    const prevMove = findPrevMove(node, arr);
+    shortestPath.push(prevMove.data);
+    queue.push(prevMove);
+  }
+  return shortestPath;
+};
 
 const knightMoves = (start, end) => {
   const startNode = chessboard.find(start);
 
   const queue = [startNode];
-  const visited = [];
+  const visited = [startNode];
 
   while (queue.length > 0) {
     const node = queue.shift();
-    // Save the node to visited nodes
-    visited.push(node);
-    // Check if move value is the end value
+    // Check if the move value equals end value
     if (chessboard.compareValues(node.data, end)) {
+      visited.forEach((move) => console.log(move.data));
+      const result = getShortestPath(visited);
       console.log(
-        `You made it in ${visited.length - 1} move(s)! Here's your path:`
+        `You made it in ${result.length - 1} move(s)! Here's your path:`
       );
-      visited.forEach((node) => console.log(node.data));
+      result.forEach((move) => console.log(move));
       return;
     }
     // Add possible moves to the queue
     node.moves.forEach((move) => {
       const newNode = chessboard.find(move);
-      if (!visited.includes(newNode)) {
+      if (checkVisited(newNode, visited)) {
+        // Save to visited nodes so they don't get added to the queue again
         queue.push(newNode);
+        visited.push(newNode);
       }
     });
   }
 };
 
-console.log(knightMoves([0, 0], [3, 3]));
-
-// const test = new ChessBoard();
-// console.log(test.board);
-// const testMoves = test.find([4, 7]);
-// testMoves.addMoves();
-// console.log(testMoves.moves);
+console.log(knightMoves([0, 0], [7, 7]));
