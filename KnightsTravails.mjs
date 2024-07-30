@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 class Node {
   constructor(data) {
     this.data = data;
@@ -34,11 +33,11 @@ class Node {
   }
 }
 
-class ChessBoard {
+export default class KnightsTravails {
   constructor() {
     this.board = this.makeBoard();
   }
-
+  // Create 64 unique nodes to make the chessboard
   makeBoard() {
     const arr = [];
     for (let i = 0; i <= 7; i++) {
@@ -56,7 +55,7 @@ class ChessBoard {
     }
     return false;
   }
-  // Return node if value is present
+  // Return square node if the searched value is present
   find(value) {
     for (let node of this.board) {
       if (this.compareValues(node.data, value)) {
@@ -65,78 +64,74 @@ class ChessBoard {
     }
     return false;
   }
+  // Inside the visited array find the first visited move that
+  // connects to/is a move of the previous move and return it
+  findPrevMove(node, arr) {
+    for (const visited of arr) {
+      for (const move of node.moves) {
+        if (this.compareValues(visited.data, move)) {
+          return visited;
+        }
+      }
+    }
+  }
+  // Checks the visited array so queue doesn't have duplicates
+  checkVisited(node, arr) {
+    for (const visited of arr) {
+      if (this.compareValues(node.data, visited.data)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // Start from the back/end of the visited array
+  // and reconstruct the shortest possible path
+  getShortestPath(arr) {
+    const start = arr.pop();
+    const shortestPath = [start.data];
+    const queue = [start];
+
+    while (queue.length > 0) {
+      const node = queue.shift();
+
+      if (this.compareValues(arr[0].data, node.data)) {
+        return shortestPath.reverse();
+      }
+
+      const prevMove = this.findPrevMove(node, arr);
+      shortestPath.push(prevMove.data);
+      queue.push(prevMove);
+    }
+    return shortestPath;
+  }
+
+  knightMoves(start, end) {
+    const startNode = this.find(start);
+
+    const queue = [startNode];
+    const visited = [startNode];
+
+    while (queue.length > 0) {
+      const node = queue.shift();
+      // Check if the move value equals end value
+      if (this.compareValues(node.data, end)) {
+        visited.push(node);
+        const result = this.getShortestPath(visited);
+        console.log(
+          `You made it in ${result.length - 1} move(s)! Here's your path:`
+        );
+        result.forEach((move) => console.log(move));
+        return;
+      }
+      // Add possible moves to the queue
+      node.moves.forEach((move) => {
+        const newNode = this.find(move);
+        if (this.checkVisited(newNode, visited)) {
+          // Save to visited nodes so they don't get added to the queue again
+          queue.push(newNode);
+          visited.push(newNode);
+        }
+      });
+    }
+  }
 }
-
-const chessboard = new ChessBoard();
-// Inside the visited array find the first visited move that
-// connects to/is a move of the previous move and return it
-const findPrevMove = (node, arr) => {
-  for (const visited of arr) {
-    for (const move of node.moves) {
-      if (chessboard.compareValues(visited.data, move)) {
-        return visited;
-      }
-    }
-  }
-};
-// Checks the visited array so queue doesn't have duplicates
-const checkVisited = (node, arr) => {
-  for (const visited of arr) {
-    if (chessboard.compareValues(node.data, visited.data)) {
-      return false;
-    }
-  }
-  return true;
-};
-// Start from the back/end of the visited array
-// and reconstruct the shortest possible path
-const getShortestPath = (arr) => {
-  const start = arr.pop();
-  const shortestPath = [start.data];
-  const queue = [start];
-
-  while (queue.length > 0) {
-    const node = queue.shift();
-
-    if (chessboard.compareValues(arr[0].data, node.data)) {
-      return shortestPath.reverse();
-    }
-
-    const prevMove = findPrevMove(node, arr);
-    shortestPath.push(prevMove.data);
-    queue.push(prevMove);
-  }
-  return shortestPath;
-};
-
-const knightMoves = (start, end) => {
-  const startNode = chessboard.find(start);
-
-  const queue = [startNode];
-  const visited = [startNode];
-
-  while (queue.length > 0) {
-    const node = queue.shift();
-    // Check if the move value equals end value
-    if (chessboard.compareValues(node.data, end)) {
-      visited.forEach((move) => console.log(move.data));
-      const result = getShortestPath(visited);
-      console.log(
-        `You made it in ${result.length - 1} move(s)! Here's your path:`
-      );
-      result.forEach((move) => console.log(move));
-      return;
-    }
-    // Add possible moves to the queue
-    node.moves.forEach((move) => {
-      const newNode = chessboard.find(move);
-      if (checkVisited(newNode, visited)) {
-        // Save to visited nodes so they don't get added to the queue again
-        queue.push(newNode);
-        visited.push(newNode);
-      }
-    });
-  }
-};
-
-console.log(knightMoves([0, 0], [7, 7]));
